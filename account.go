@@ -27,7 +27,15 @@ func accountTest() {
 	fmt.Println("we are getting account balance.")
 	getAccountBalance("0xe9A9fb0554af4FF167F2b33a64a358Ea4C2D6Aad", client)
 
-	fmt.Println("we are generating wallet.")
+	// fmt.Println("we are generating wallet...")
+	// for i := int(0); i < 1000; i++ {
+	// 	finded := generateWalletAndTest(client)
+	// 	fmt.Println(i)
+	// 	if finded {
+	// 		break
+	// 	}
+	// }
+
 	generateWallet()
 
 	fmt.Println("we are verifing address.")
@@ -51,7 +59,7 @@ func addressVerify(address string, client *ethclient.Client) {
 	}
 }
 
-func getAccountBalance(address string, client *ethclient.Client) {
+func getAccountBalance(address string, client *ethclient.Client) big.Float {
 	account := common.HexToAddress(address)
 	balance, err := client.BalanceAt(context.Background(), account, nil)
 	if err != nil {
@@ -63,16 +71,19 @@ func getAccountBalance(address string, client *ethclient.Client) {
 	ethValue := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 
 	fmt.Println(ethValue)
+
+	return *ethValue
 }
 
-func generateWallet() {
+func generateWallet() (string, string) {
 	privateKey, err := crypto.GenerateKey()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	privateKeyBytes := crypto.FromECDSA(privateKey)
-	fmt.Println(hexutil.Encode(privateKeyBytes)[2:])
+	privateKeyStr := hexutil.Encode(privateKeyBytes)
+	fmt.Println("private key: ", privateKeyStr)
 
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
@@ -81,12 +92,27 @@ func generateWallet() {
 	}
 
 	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
-	fmt.Println(hexutil.Encode(publicKeyBytes)[4:])
+	fmt.Println("public key: ", hexutil.Encode(publicKeyBytes)[4:])
 
 	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
-	fmt.Println(address)
+	fmt.Println("address: ", address)
 
 	hash := sha3.NewLegacyKeccak256()
 	hash.Write(publicKeyBytes[1:])
 	fmt.Println(hexutil.Encode(hash.Sum(nil)[12:]))
+
+	return privateKeyStr, address
+}
+
+func generateWalletAndTest(client *ethclient.Client) bool {
+	privateKey, address := generateWallet()
+	ethValue := getAccountBalance(address, client)
+
+	if ethValue.Cmp(big.NewFloat(0)) > 0 {
+		fmt.Println("private key: ", privateKey)
+		fmt.Println("address: ", address)
+		fmt.Println("eth value: ", ethValue)
+		return true
+	}
+	return false
 }

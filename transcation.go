@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"fmt"
 	"log"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -15,7 +17,8 @@ func txTest() {
 	client := getClient()
 
 	// getBlockInfo(client)
-	getAllTxInfo(client, *big.NewInt(8882896))
+	// getAllTxInfo(client, *big.NewInt(8882896))
+	txEth(client)
 }
 
 func getClient() *ethclient.Client {
@@ -92,4 +95,19 @@ func getAllTxInfo(client *ethclient.Client, number big.Int) {
 
 		fmt.Println(tx.Hash().Hex())
 	}
+}
+
+func txEth(client *ethclient.Client) {
+	privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	fmt.Println(fromAddress)
 }
