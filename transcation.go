@@ -7,18 +7,22 @@ import (
 	"log"
 	"math/big"
 
+	// "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"golang.org/x/crypto/sha3"
 )
 
 func txTest() {
-	client := getClient()
+	// client := getClient()
 
 	// getBlockInfo(client)
 	// getAllTxInfo(client, *big.NewInt(8882896))
-	txEth(client)
+	// txEth(client)
+	describeBlock()
 }
 
 func getClient() *ethclient.Client {
@@ -98,7 +102,7 @@ func getAllTxInfo(client *ethclient.Client, number big.Int) {
 }
 
 func txEth(client *ethclient.Client) {
-	privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
+	privateKey, err := crypto.HexToECDSA(myPrivateKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -109,5 +113,134 @@ func txEth(client *ethclient.Client) {
 		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
 	}
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-	fmt.Println(fromAddress)
+	fmt.Println("from address: ", fromAddress)
+
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("nonce at: ", nonce)
+
+	value := big.NewInt(100000000000000000)
+	gasLimit := uint64(21000)
+	toAddress := common.HexToAddress("0xA738f13354ADaf4969aE7e8C8E5a975eee20a4A9")
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("suggest gas price: ", gasPrice)
+
+	tx := types.NewTransaction(nonce, toAddress, value, gasLimit, gasPrice, nil)
+
+	chainId, err := client.NetworkID(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainId), privateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("tx sent: ", signedTx.Hash().Hex())
+}
+
+func txToken(client *ethclient.Client) {
+	privateKey, err := crypto.HexToECDSA(myPrivateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	fmt.Println("from address: ", fromAddress)
+
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("nonce at: ", nonce)
+
+	value := big.NewInt(0)
+	toAddress := common.HexToAddress("0xA738f13354ADaf4969aE7e8C8E5a975eee20a4A9")
+	tokenAddress := common.HexToAddress("0x326C977E6efc84E512bB9C30f76E30c160eD06FB")
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("suggest gas price: ", gasPrice)
+
+	transferSignature := []byte("transfer(address,uint256)")
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(transferSignature)
+	methodId := hash.Sum(nil)[:4]
+	fmt.Println("methodId: ", hexutil.Encode(methodId))
+
+	paddedAddress := common.LeftPadBytes(toAddress.Bytes(), 32)
+	fmt.Println("padded address: ", hexutil.Encode(paddedAddress))
+
+	amount := new(big.Int)
+	amount.SetString("10000000000000000000", 10)
+
+	paddedAmount := common.LeftPadBytes(amount.Bytes(), 32)
+	fmt.Println("padded amount: ", hexutil.Encode(paddedAmount))
+
+	var data []byte
+	data = append(data, methodId...)
+	data = append(data, paddedAddress...)
+	data = append(data, paddedAmount...)
+
+	gasLimit := uint64(50000)
+	fmt.Println(gasLimit)
+
+	tx := types.NewTransaction(nonce, tokenAddress, value, gasLimit, gasPrice, data)
+
+	chainId, err := client.NetworkID(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainId), privateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("tx sent: ", signedTx.Hash().Hex())
+}
+
+func describeBlock() {
+	client, err := ethclient.Dial("wss://quaint-hardworking-breeze.ethereum-goerli.discover.quiknode.pro/31cc07938198cf8aa72ef7364dfc58e0578f8708/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	headers := make(chan *types.Header)
+	sub, err := client.SubscribeNewHead(context.Background(), headers)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for {
+		select {
+		case err := <-sub.Err():
+			log.Fatal(err)
+		case header := <-headers:
+			fmt.Println(header.Hash().Hex())
+		}
+	}
 }
