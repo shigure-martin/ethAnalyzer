@@ -150,7 +150,7 @@ func txEth(client *ethclient.Client) {
 	fmt.Println("tx sent: ", signedTx.Hash().Hex())
 }
 
-func txToken(client *ethclient.Client) {
+func txToken(client *ethclient.Client) *types.Transaction {
 	privateKey, err := crypto.HexToECDSA(myPrivateKey)
 	if err != nil {
 		log.Fatal(err)
@@ -221,6 +221,8 @@ func txToken(client *ethclient.Client) {
 	}
 
 	fmt.Println("tx sent: ", signedTx.Hash().Hex())
+
+	return signedTx
 }
 
 func describeBlock() {
@@ -243,4 +245,8 @@ func describeBlock() {
 			fmt.Println(header.Hash().Hex())
 		}
 	}
+}
+
+func rawTx(client *ethclient.Client, signedTx *types.Transaction) {
+
 }
