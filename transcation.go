@@ -17,12 +17,12 @@ import (
 )
 
 func txTest() {
-	// client := getClient()
+	client := getClient()
 
-	// getBlockInfo(client)
+	getBlockInfo(client)
 	// getAllTxInfo(client, *big.NewInt(8882896))
 	// txEth(client)
-	describeBlock()
+	// describeBlock()
 }
 
 func getClient() *ethclient.Client {
@@ -33,7 +33,7 @@ func getClient() *ethclient.Client {
 	return client
 }
 
-func getBlockInfo(client *ethclient.Client) {
+func getBlockInfo(client *ethclient.Client) { //用于获取当前最新区块的head number，以及其中包含交易的数量
 	header, err := client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		log.Fatal(err)
