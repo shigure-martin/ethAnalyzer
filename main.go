@@ -1,6 +1,9 @@
 package main
 
+// import "example/analyzer/signature"
+
 func main() {
-	txTest()
+	detect()
 	// accountTest()
+	// signature.Main()
 }

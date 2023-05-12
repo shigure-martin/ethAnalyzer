@@ -17,7 +17,7 @@ import (
 )
 
 func txTest() {
-	client := getClient()
+	client := getClient(true)
 
 	getBlockInfo(client)
 	// getAllTxInfo(client, *big.NewInt(8882896))
@@ -25,8 +25,15 @@ func txTest() {
 	// describeBlock()
 }
 
-func getClient() *ethclient.Client {
-	client, err := ethclient.Dial(providerUrl)
+func getClient(isURL bool) *ethclient.Client {
+	var client *ethclient.Client
+	var err error
+	if isURL {
+		client, err = ethclient.Dial(providerUrl)
+	} else {
+		client, err = ethclient.Dial(providerWSS)
+	}
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -225,11 +232,7 @@ func txToken(client *ethclient.Client) *types.Transaction {
 	return signedTx
 }
 
-func describeBlock() {
-	client, err := ethclient.Dial("wss://quaint-hardworking-breeze.ethereum-goerli.discover.quiknode.pro/31cc07938198cf8aa72ef7364dfc58e0578f8708/")
-	if err != nil {
-		log.Fatal(err)
-	}
+func subscribeBlock(client *ethclient.Client) {
 
 	headers := make(chan *types.Header)
 	sub, err := client.SubscribeNewHead(context.Background(), headers)
