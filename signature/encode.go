@@ -2,11 +2,9 @@ package signature
 
 import (
 	"bufio"
-	"bytes"
 	"container/list"
 	"encoding/gob"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -28,7 +26,6 @@ func readMethod(address string) []Combine {
 
 	scanner := bufio.NewScanner(file)
 
-	// lis := list.New()
 	lis := []Combine{}
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -41,9 +38,7 @@ func readMethod(address string) []Combine {
 		combine.Method = line
 		combine.Sigs = hexutil.Encode(methodId)
 
-		// lis.PushBack(combine)
 		lis = append(lis, combine)
-		// fmt.Println(hexutil.Encode(methodId))
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -83,46 +78,33 @@ func printSig(address string, lis []Combine) {
 		log.Fatal(err)
 		return
 	}
-
-	// if err := ioutil.WriteFile(address, buf.Bytes(), 0644); err != nil {
-	// 	log.Fatal(err)
-	// 	return
-	// }
-
-	// for item := lis.Front(); item != nil; item = item.Next() {
-	// 	fmt.Fprintln(outFile, item.Value)
-	// }
 }
 
 func readStruct(address string) {
-	file, err := ioutil.ReadFile(address)
+	file, err := os.Open(address)
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
+	defer file.Close()
 
-	var result *list.List
-	decoder := gob.NewDecoder(bytes.NewReader(file))
-	if err := decoder.Decode(&result); err != nil {
+	var lis []Combine
+	decoder := gob.NewDecoder(file)
+	if err := decoder.Decode(&lis); err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	fmt.Println(result)
-	// scanner := bufio.NewScanner(file)
-
-	// for scanner.Scan() {
-	// 	var combine Combine
-	// 	combine = scanner.Text()
-	// }
+	for _, combine := range lis {
+		fmt.Println(combine.Sigs + " " + combine.Method)
+	}
 }
 
 func Main() {
-	lis := readMethod("signature/methods.txt")
+	// lis := readMethod("signature/methods.txt")
 
 	// newL := deDuplicate(lis)
 
-	printSig("signature/struct.gob", lis)
+	// printSig("signature/struct.gob", lis)
 
-	// readStruct("signature/struct.txt")
+	readStruct("signature/struct.gob")
 }
