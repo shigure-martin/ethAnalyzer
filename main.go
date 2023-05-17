@@ -1,9 +1,10 @@
 package main
 
-// import "example/analyzer/signature"
+import "example/analyzer/signature"
 
 func main() {
-	detect()
+	// detect()
 	// accountTest()
 	// signature.Main()
+	signature.Main()
 }
