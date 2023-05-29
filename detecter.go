@@ -13,6 +13,8 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"example/analyzer/signature"
 )
 
 func detect() {
@@ -41,20 +43,21 @@ func readSigs() *list.List {
 	return lis
 }
 
-func checkSig(sigs *list.List, data string) bool {
+func checkSig(sigs []signature.Combine, data string) bool {
 	result := false
 
-	for e := sigs.Front(); e != nil; e = e.Next() {
-		if e.Value == data {
+	for _, combine := range sigs {
+		if combine.Sigs == data {
 			result = true
 			break
 		}
 	}
+
 	return result
 }
 
 func getTxs(client *ethclient.Client) {
-	sigs := readSigs()
+	sigs := signature.GetCombines("signature/struct.gob") //readSigs()
 
 	var block *types.Block
 	var err error

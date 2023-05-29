@@ -99,6 +99,23 @@ func readStruct(address string) {
 	}
 }
 
+func GetCombines(address string) []Combine {
+	file, err := os.Open(address)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	var result []Combine
+	decoder := gob.NewDecoder(file)
+	if err := decoder.Decode(&result); err != nil {
+		log.Fatal(err)
+		return []Combine{}
+	}
+
+	return result
+}
+
 func Main() {
 	// lis := readMethod("signature/methods.txt")
 
