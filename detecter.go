@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 
 	// "github.com/ethereum/go-ethereum"
@@ -43,17 +44,20 @@ func readSigs() *list.List {
 	return lis
 }
 
-func checkSig(sigs []signature.Combine, data string) bool {
+func checkSig(sigs []signature.Combine, data string) (bool, signature.Combine) {
 	result := false
+
+	result_combine := signature.Combine{}
 
 	for _, combine := range sigs {
 		if combine.Sigs == data {
+			result_combine = combine
 			result = true
 			break
 		}
 	}
 
-	return result
+	return result, result_combine
 }
 
 func getTxs(client *ethclient.Client) {
@@ -62,7 +66,7 @@ func getTxs(client *ethclient.Client) {
 	var block *types.Block
 	var err error
 
-	block, err = client.BlockByNumber(context.Background(), nil)
+	block, err = client.BlockByNumber(context.Background(), big.NewInt(9082721))
 
 	if err != nil {
 		log.Fatal(err)
@@ -75,9 +79,10 @@ func getTxs(client *ethclient.Client) {
 			continue
 		}
 		data := hexutil.Encode(tx.Data())[:10]
-		isDetected := checkSig(sigs, data)
+		isDetected, combine := checkSig(sigs, data)
 		if isDetected {
 			fmt.Println("tx: ", tx.Hash())
+			fmt.Println("method: ", combine.Method)
 		}
 	}
 }
