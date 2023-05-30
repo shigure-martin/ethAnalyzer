@@ -8,9 +8,13 @@ import (
 	"log"
 	"math/big"
 	"os"
+	"strings"
 
 	// "github.com/ethereum/go-ethereum"
 	// "github.com/ethereum/go-ethereum/common"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -83,6 +87,29 @@ func getTxs(client *ethclient.Client) {
 		if isDetected {
 			fmt.Println("tx: ", tx.Hash())
 			fmt.Println("method: ", combine.Method)
+			fmt.Println("raw data: ", hexutil.Encode(tx.Data()))
 		}
 	}
 }
+
+// func extractParam(_data string, _method string) {
+// 	abiJSON := `[{"inputs": [{"internalType": "uint256","name": "amountIn","type": "uint256"},{"internalType": "uint256","name": "amountOutMin","type": "uint256"},{"internalType": "address[]","name": "path","type": "address[]"},{"internalType": "address","name": "to","type": "address"},{"internalType": "uint256","name": "deadline","type": "uint256"}],"name": "swapExactTokensForETHSupportingFeeOnTransferTokens","outputs": [],"stateMutability": "payable","type": "function"}]`
+
+// 	abiObj, err := abi.JSON(strings.NewReader(abiJSON))
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	hexData := "0x19bea24b00000000000000000000000005569489c489a392e94090077ac3cc2d1a9e6a45000000000000000000000000006903471486b8b25aed908a347482e8e6e56c56bf0000000000000000000000000000000000000000000000000000000066d3d1200000000000000000000000000000000000000000000000018d4abe6d6c0000000000000000000000000000000000000000000000000000000000000002"
+
+// 	// bytesData, _ := hexutil.Decode(hexData)
+// 	method := abiObj.Methods["swapExactTokensForETHSupportingFeeOnTransferTokens"]
+
+// 	input := method.Inputs
+// 	data := common.Hex2Bytes(hexData)
+
+// 	arguments, err := method.Inputs.Unpack(data)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
