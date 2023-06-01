@@ -138,11 +138,14 @@ func readABI() {
 	method := abiJSON.Methods["swapExactTokensForETHSupportingFeeOnTransferTokens"]
 	fmt.Println("method: ", method.Inputs.NonIndexed())
 
+	params := method.Inputs.NonIndexed()[2].Type
+	fmt.Println("param type: ", params.String() == "address[]")
+
 	rawData := "0x791ac947000000000000000000000000000000000000000000000000016345785d8a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000007cf196415cdd1ef08ca2358a8282d33ba089b9f300000000000000000000000000000000000000000000000000000000647264c40000000000000000000000000000000000000000000000000000000000000002000000000000000000000000b4fbf271143f4fbf7b91a5ded31805e42b2208d6000000000000000000000000efadb5c4d4fc46c51e6639214aa95057d25a2573"
-	data := common.Hex2Bytes(rawData[2:])         // remove '0x'
-	params, err := method.Inputs.Unpack(data[4:]) // remove the signatrue of function
+	data := common.Hex2Bytes(rawData[2:])              // remove '0x'
+	paramValues, err := method.Inputs.Unpack(data[4:]) // remove the signatrue of function
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(params)
+	fmt.Println(paramValues)
 }

@@ -7,14 +7,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"golang.org/x/crypto/sha3"
 )
 
 type Combine struct {
-	Sigs   string
-	Method string
+	Sigs    string
+	Method  string
+	paraPos []int
 }
 
 func readMethod(address string) []Combine {
@@ -29,14 +32,24 @@ func readMethod(address string) []Combine {
 	lis := []Combine{}
 	for scanner.Scan() {
 		line := scanner.Text()
-		transferSignature := []byte(line)
+		subLines := strings.Split(line, " ")
+
+		paraPos := []int{}
+		ints := strings.Split(subLines[0], ",")
+		for _, pos := range ints {
+			para, _ := strconv.Atoi(pos)
+			paraPos = append(paraPos, para)
+		}
+
+		transferSignature := []byte(subLines[1])
 		hash := sha3.NewLegacyKeccak256()
 		hash.Write(transferSignature)
 		methodId := hash.Sum(nil)[:4]
 
 		var combine Combine
-		combine.Method = line
+		combine.Method = subLines[1]
 		combine.Sigs = hexutil.Encode(methodId)
+		combine.paraPos = paraPos
 
 		lis = append(lis, combine)
 	}
@@ -117,11 +130,14 @@ func GetCombines(address string) []Combine {
 }
 
 func Main() {
-	// lis := readMethod("signature/methods.txt")
+	lis := readMethod("signature/methods.txt")
 
 	// newL := deDuplicate(lis)
+	for _, combine := range lis {
+		fmt.Println(combine)
+	}
 
 	// printSig("signature/struct.gob", lis)
 
-	readStruct("signature/struct.gob")
+	// readStruct("signature/struct.gob")
 }
