@@ -17,7 +17,8 @@ import (
 type Combine struct {
 	Sigs    string
 	Method  string
-	paraPos []int
+	ParaPos []int
+	Name    string
 }
 
 func readMethod(address string) []Combine {
@@ -34,6 +35,7 @@ func readMethod(address string) []Combine {
 		line := scanner.Text()
 		subLines := strings.Split(line, " ")
 
+		// divide the parameters position
 		paraPos := []int{}
 		ints := strings.Split(subLines[0], ",")
 		for _, pos := range ints {
@@ -41,15 +43,20 @@ func readMethod(address string) []Combine {
 			paraPos = append(paraPos, para)
 		}
 
+		// extract the fully function name for signature
 		transferSignature := []byte(subLines[1])
 		hash := sha3.NewLegacyKeccak256()
 		hash.Write(transferSignature)
 		methodId := hash.Sum(nil)[:4]
 
+		// extract the simplfied function name
+		name := strings.Split(subLines[1], "(")[0]
+
 		var combine Combine
 		combine.Method = subLines[1]
 		combine.Sigs = hexutil.Encode(methodId)
-		combine.paraPos = paraPos
+		combine.Name = name
+		combine.ParaPos = paraPos
 
 		lis = append(lis, combine)
 	}
@@ -93,25 +100,6 @@ func printSig(address string, lis []Combine) {
 	}
 }
 
-func readStruct(address string) {
-	file, err := os.Open(address)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	var lis []Combine
-	decoder := gob.NewDecoder(file)
-	if err := decoder.Decode(&lis); err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	for _, combine := range lis {
-		fmt.Println(combine.Sigs + " " + combine.Method)
-	}
-}
-
 func GetCombines(address string) []Combine {
 	file, err := os.Open(address)
 	if err != nil {
@@ -130,14 +118,18 @@ func GetCombines(address string) []Combine {
 }
 
 func Main() {
-	lis := readMethod("signature/methods.txt")
+	// lis := readMethod("signature/methods.txt")
 
 	// newL := deDuplicate(lis)
-	for _, combine := range lis {
-		fmt.Println(combine)
-	}
+	// for _, combine := range lis {
+	// 	fmt.Println(combine)
+	// }
 
 	// printSig("signature/struct.gob", lis)
 
-	// readStruct("signature/struct.gob")
+	combines := GetCombines("signature/struct.gob")
+
+	for _, combine := range combines {
+		fmt.Println(combine.Sigs + " " + combine.Method + " " + combine.Name + " " + fmt.Sprintf("%v", combine.ParaPos))
+	}
 }
