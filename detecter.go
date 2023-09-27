@@ -7,14 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/big"
+	// "math/big"
 	"os"
 
 	// "github.com/ethereum/go-ethereum"
 	// "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -73,7 +72,7 @@ func getTxs(client *ethclient.Client) {
 	var block *types.Block
 	var err error
 
-	block, err = client.BlockByNumber(context.Background(), big.NewInt(28880676))
+	block, err = client.BlockByNumber(context.Background(), nil) //big.NewInt(28880676))
 
 	if err != nil {
 		log.Fatal(err)
@@ -91,26 +90,25 @@ func getTxs(client *ethclient.Client) {
 			fmt.Println("tx hash: ", tx.Hash())
 			// fmt.Println("method: ", combine.Method)
 			// fmt.Println("raw data: ", hexutil.Encode(tx.Data()))
-			extractParam(hexutil.Encode(tx.Data()), combine, abiJSON)
+			extractParam(tx.Data(), combine, abiJSON)
 		}
 	}
 }
 
-func extractParam(_data string, _combine signature.Combine, _abiJSON abi.ABI) {
+func extractParam(_data []byte, _combine signature.Combine, _abiJSON abi.ABI) {
 
 	method := _abiJSON.Methods[_combine.Name]
 
 	// input := method.Inputs
-	data := common.Hex2Bytes(_data[2:])
+	// data := common.Hex2Bytes(_data[2:])
 
-	arguments, err := method.Inputs.Unpack(data[4:])
+	arguments, err := method.Inputs.Unpack(_data[4:])
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// var token_addr []string
 	for _, position := range _combine.ParaPos {
-		// token_addr = append(token_addr, arguments[position])
 		fmt.Println(arguments[position])
 	}
 
@@ -127,23 +125,6 @@ func readABI() abi.ABI {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// for _, method := range abiJSON.Methods {
-	// 	fmt.Println(method.Name)
-	// }
-	// method := abiJSON.Methods["swapExactTokensForETHSupportingFeeOnTransferTokens"]
-	// fmt.Println("method: ", method.Inputs.NonIndexed())
-
-	// params := method.Inputs.NonIndexed()[2].Type
-	// fmt.Println("param type: ", params.String() == "address[]")
-
-	// rawData := "0x791ac947000000000000000000000000000000000000000000000000016345785d8a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000007cf196415cdd1ef08ca2358a8282d33ba089b9f300000000000000000000000000000000000000000000000000000000647264c40000000000000000000000000000000000000000000000000000000000000002000000000000000000000000b4fbf271143f4fbf7b91a5ded31805e42b2208d6000000000000000000000000efadb5c4d4fc46c51e6639214aa95057d25a2573"
-	// data := common.Hex2Bytes(rawData[2:])              // remove '0x'
-	// paramValues, err := method.Inputs.Unpack(data[4:]) // remove the signatrue of function
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println(paramValues)
 
 	return abiJSON
 }
