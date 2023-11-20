@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
 	// "math/big"
 	"os"
 
@@ -14,6 +15,7 @@ import (
 	// "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -25,6 +27,7 @@ func detect() {
 	client := getClient(true)
 	getTxs(client)
 	// readABI()
+
 }
 
 func readSigs() *list.List {
@@ -90,12 +93,12 @@ func getTxs(client *ethclient.Client) {
 			fmt.Println("tx hash: ", tx.Hash())
 			// fmt.Println("method: ", combine.Method)
 			// fmt.Println("raw data: ", hexutil.Encode(tx.Data()))
-			extractParam(tx.Data(), combine, abiJSON)
+			extractParam(tx.Data(), combine, abiJSON, client)
 		}
 	}
 }
 
-func extractParam(_data []byte, _combine signature.Combine, _abiJSON abi.ABI) {
+func extractParam(_data []byte, _combine signature.Combine, _abiJSON abi.ABI, client *ethclient.Client) {
 
 	method := _abiJSON.Methods[_combine.Name]
 
@@ -110,6 +113,27 @@ func extractParam(_data []byte, _combine signature.Combine, _abiJSON abi.ABI) {
 	// var token_addr []string
 	for _, position := range _combine.ParaPos {
 		fmt.Println(arguments[position])
+
+		addr, ok := arguments[position].([]common.Address)
+
+		if !ok {
+			fmt.Println("addresses error")
+		}
+
+		// TODO:
+		token, err := NewErc20(addr[0], client)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		name, err := token.Name(nil)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println(name)
 	}
 
 }
