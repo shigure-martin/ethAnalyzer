@@ -2,28 +2,71 @@ package mysqlconn
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	"fmt"
 	"log"
+
+	_ "github.com/go-sql-driver/mysql"
 )
+
+type Tokens struct {
+	Token_name string
+	Token_addr string
+}
+
+func panic_err(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
 
 func Update() {
 
 }
 
-func Select() {
+func Select_token(db *sql.DB, token Tokens) []Tokens {
+	var tokens []Tokens
 
+	sql := "select * from tokens where token_addr = ?"
+
+	rows, err := db.Query(sql, token.Token_addr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var to Tokens
+		var id int
+		if err := rows.Scan(&id, &to.Token_name, &to.Token_addr); err != nil {
+			log.Fatal(err)
+		}
+		tokens = append(tokens, to)
+	}
+
+	return tokens
 }
 
 func Delete() {
 
 }
 
-func Insert(db *sql.DB) bool {
+func Insert_token(db *sql.DB, token Tokens) {
 
-	return true
+	sql := "insert into tokens(token_name, token_addr) values(?,?)"
+	stmt, err := db.Prepare(sql)
+	panic_err(err)
+	defer stmt.Close()
+
+	result, err := stmt.Exec(token.Token_name, token.Token_addr)
+	panic_err(err)
+
+	row_number, err := result.LastInsertId()
+	panic_err(err)
+
+	log.Println("insert success ", row_number)
 }
 
-func connectDB(uri string) *sql.DB {
+func ConnectDB(uri string) *sql.DB {
 	var db *sql.DB
 	var err error
 	db, err = sql.Open("mysql", uri)
@@ -35,13 +78,15 @@ func connectDB(uri string) *sql.DB {
 }
 
 func Main() {
-	db := connectDB("root:123456@tcp(172.19.0.1:3306)/mev_bot_db")
+	db := ConnectDB("root:123456@tcp(172.19.0.1:3306)/mev_bot_db")
 
-	err := db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		log.Fatal("connect success\n")
+	var token Tokens
+	token.Token_addr = "test_addr"
+
+	result := Select_token(db, token)
+	fmt.Println(len(result))
+	for _, value := range result {
+		fmt.Println(value.Token_name, value.Token_addr)
 	}
 
 	db.Close()

@@ -20,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"example/analyzer/mysqlconn"
 	"example/analyzer/signature"
 )
 
@@ -120,20 +121,35 @@ func extractParam(_data []byte, _combine signature.Combine, _abiJSON abi.ABI, cl
 			fmt.Println("addresses error")
 		}
 
+		db := mysqlconn.ConnectDB("root:123456@tcp(172.19.0.1:3306)/mev_bot_db")
+
 		// TODO:
-		token, err := NewErc20(addr[0], client)
+		for i := 0; i < len(addr); i++ {
+			token, err := NewErc20(addr[i], client)
+			if err != nil {
+				fmt.Println(err)
+			}
+			name, err := token.Name(nil)
+			if err != nil {
+				fmt.Println(err)
+			}
 
-		if err != nil {
-			fmt.Println(err)
+			fmt.Println("name: " + name)
+			fmt.Println("addr: " + addr[i].String())
+
+			var to mysqlconn.Tokens
+			to.Token_name = name
+			to.Token_addr = addr[i].String()
+
+			select_r := mysqlconn.Select_token(db, to)
+			if len(select_r) < 1 {
+				mysqlconn.Insert_token(db, to)
+			} else {
+				fmt.Println(to.Token_name, " has been stored")
+			}
 		}
 
-		name, err := token.Name(nil)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		fmt.Println(name)
+		db.Close()
 	}
 
 }
