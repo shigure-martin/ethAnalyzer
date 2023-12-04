@@ -1,11 +1,11 @@
 package main
 
 // import "example/analyzer/signature"
-// import "example/analyzer/mysqlconn"
+import "example/analyzer/mysqlconn"
 
 func main() {
-	// mysqlconn.Main()
-	detect()
+	mysqlconn.Main()
+	// detect()
 	// accountTest()
 	// signature.Main()
 }

@@ -88,10 +88,12 @@ func getTxs(client *ethclient.Client) {
 		if len(tx.Data()) == 0 {
 			continue
 		}
+
 		data := hexutil.Encode(tx.Data())[:10]
 		isDetected, combine := checkSig(sigs, data)
 		if isDetected {
 			fmt.Println("tx hash: ", tx.Hash())
+			fmt.Println("tx to: ", tx.To().String())
 			// fmt.Println("method: ", combine.Method)
 			// fmt.Println("raw data: ", hexutil.Encode(tx.Data()))
 			extractParam(tx.Data(), combine, abiJSON, client)
