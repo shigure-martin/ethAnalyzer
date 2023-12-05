@@ -19,6 +19,7 @@ type Pools struct {
 	Pool_addr string
 	Token_1   Tokens
 	Token_2   Tokens
+	Token_3   Tokens
 	Protocol  string
 }
 
@@ -33,8 +34,9 @@ func Update() {
 
 }
 
-func Select_token(db *sql.DB, token Tokens) []Tokens {
-	var tokens []Tokens
+func Select_token(db *sql.DB, token Tokens) Tokens {
+	var to Tokens
+	to.Id = 0
 
 	sql := "select * from tokens where token_addr = ?"
 
@@ -45,14 +47,13 @@ func Select_token(db *sql.DB, token Tokens) []Tokens {
 	defer rows.Close()
 
 	for rows.Next() {
-		var to Tokens
+
 		if err := rows.Scan(&to.Id, &to.Token_name, &to.Token_addr); err != nil {
 			log.Fatal(err)
 		}
-		tokens = append(tokens, to)
 	}
 
-	return tokens
+	return to
 }
 
 func Select_token_by_id(db *sql.DB, id int) Tokens {
@@ -85,11 +86,15 @@ func Select_pool_by_id(db *sql.DB, id int) Pools {
 	for rows.Next() {
 		var token_1_id int
 		var token_2_id int
-		err := rows.Scan(&pool.Id, &pool.Pool_addr, &pool.Protocol, &token_1_id, &token_2_id)
+		var token_3_id int
+		err := rows.Scan(&pool.Id, &pool.Pool_addr, &pool.Protocol, &token_1_id, &token_2_id, &token_3_id)
 		panic_err(err)
 
 		pool.Token_1 = Select_token_by_id(db, token_1_id)
 		pool.Token_2 = Select_token_by_id(db, token_2_id)
+		if token_3_id != 0 {
+			pool.Token_3 = Select_token_by_id(db, token_3_id)
+		}
 	}
 
 	return pool
@@ -117,12 +122,12 @@ func Insert_token(db *sql.DB, token Tokens) int {
 }
 
 func Insert_pool(db *sql.DB, pool Pools) {
-	sql := "insert into pools(pool_addr, protocol, token_1_id, token_2_id) values(?,?,?,?)" // TODO
+	sql := "insert into pools(pool_addr, protocol, token_1_id, token_2_id, token_3_id) values(?,?,?,?,?)" // TODO
 	stmt, err := db.Prepare(sql)
 	panic_err(err)
 	defer stmt.Close()
 
-	result, err := stmt.Exec(pool.Pool_addr, pool.Protocol, pool.Token_1.Id, pool.Token_2.Id)
+	result, err := stmt.Exec(pool.Pool_addr, pool.Protocol, pool.Token_1.Id, pool.Token_2.Id, pool.Token_3.Id)
 	panic_err(err)
 
 	row_number, err := result.LastInsertId()

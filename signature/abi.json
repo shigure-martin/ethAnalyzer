@@ -26,7 +26,8 @@
 			}
 		],
 		"stateMutability": "nonpayable",
-		"type": "function"
+		"type": "function",
+		"protocol": "IUSDC"
 	},
 	{
 		"inputs": [
@@ -54,7 +55,8 @@
 		"name": "swap",
 		"outputs": [],
 		"stateMutability": "nonpayable",
-		"type": "function"
+		"type": "function",
+		"protocol": "IPancakePair"
 	},
 	{
 		"inputs": [
@@ -67,7 +69,8 @@
 		"name": "swap",
 		"outputs": [],
 		"stateMutability": "nonpayable",
-		"type": "function"
+		"type": "function",
+		"protocol": "AMP"
 	},
 	{
 		"inputs": [
@@ -106,7 +109,8 @@
 			}
 		],
 		"stateMutability": "payable",
-		"type": "function"
+		"type": "function",
+		"protocol": "Monoswap"
 	},
 	{
 		"inputs": [
@@ -140,7 +144,8 @@
 			}
 		],
 		"stateMutability": "payable",
-		"type": "function"
+		"type": "function",
+		"protocol": "IDMMExchangeRouter"
 	},
 	{
 		"inputs": [

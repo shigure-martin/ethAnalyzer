@@ -94,14 +94,13 @@ func getTxs(client *ethclient.Client) {
 		if isDetected {
 			fmt.Println("tx hash: ", tx.Hash())
 			fmt.Println("tx to: ", tx.To().String())
-			// fmt.Println("method: ", combine.Method)
-			// fmt.Println("raw data: ", hexutil.Encode(tx.Data()))
-			extractParam(tx.Data(), combine, abiJSON, client)
+			extractParam(tx, combine, abiJSON, client)
 		}
 	}
 }
 
-func extractParam(_data []byte, _combine signature.Combine, _abiJSON abi.ABI, client *ethclient.Client) {
+func extractParam(tx *types.Transaction, _combine signature.Combine, _abiJSON abi.ABI, client *ethclient.Client) {
+	_data := tx.Data()
 
 	method := _abiJSON.Methods[_combine.Name]
 
@@ -126,6 +125,12 @@ func extractParam(_data []byte, _combine signature.Combine, _abiJSON abi.ABI, cl
 		db := mysqlconn.ConnectDB("root:123456@tcp(172.19.0.1:3306)/mev_bot_db")
 
 		// TODO:
+		var pool mysqlconn.Pools
+		pool.Pool_addr = tx.To().String()
+		pool.Protocol = method.Name
+
+		var token_list []mysqlconn.Tokens
+
 		for i := 0; i < len(addr); i++ {
 			token, err := NewErc20(addr[i], client)
 			if err != nil {
@@ -144,12 +149,22 @@ func extractParam(_data []byte, _combine signature.Combine, _abiJSON abi.ABI, cl
 			to.Token_addr = addr[i].String()
 
 			select_r := mysqlconn.Select_token(db, to)
-			if len(select_r) < 1 {
-				mysqlconn.Insert_token(db, to)
+			if select_r.Id == 0 {
+				select_r.Id = mysqlconn.Insert_token(db, to)
 			} else {
 				fmt.Println(to.Token_name, " has been stored")
 			}
+			token_list = append(token_list, select_r)
 		}
+
+		pool.Token_1 = token_list[0]
+		pool.Token_2 = token_list[1]
+		if len(token_list) > 2 {
+			pool.Token_3 = token_list[2]
+		}
+
+		fmt.Println(pool)
+		mysqlconn.Insert_pool(db, pool)
 
 		db.Close()
 	}
