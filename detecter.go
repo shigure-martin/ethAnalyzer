@@ -7,12 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/big"
 
-	// "math/big"
 	"os"
-
-	// "github.com/ethereum/go-ethereum"
-	// "github.com/ethereum/go-ethereum/common"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -76,7 +73,7 @@ func getTxs(client *ethclient.Client) {
 	var block *types.Block
 	var err error
 
-	block, err = client.BlockByNumber(context.Background(), nil) //big.NewInt(28880676))
+	block, err = client.BlockByNumber(context.Background(), big.NewInt(18768231)) //big.NewInt(28880676))
 
 	if err != nil {
 		log.Fatal(err)
@@ -94,6 +91,7 @@ func getTxs(client *ethclient.Client) {
 		if isDetected {
 			fmt.Println("tx hash: ", tx.Hash())
 			fmt.Println("tx to: ", tx.To().String())
+
 			extractParam(tx, combine, abiJSON, client)
 		}
 	}
@@ -157,14 +155,23 @@ func extractParam(tx *types.Transaction, _combine signature.Combine, _abiJSON ab
 			token_list = append(token_list, select_r)
 		}
 
-		pool.Token_1 = token_list[0]
-		pool.Token_2 = token_list[1]
-		if len(token_list) > 2 {
-			pool.Token_3 = token_list[2]
-		}
-
 		fmt.Println(pool)
-		mysqlconn.Insert_pool(db, pool)
+		router, err := NewRouter(*tx.To(), client)
+		if err != nil {
+			fmt.Println(err)
+		}
+		factory_addr, err := router.Factory(nil)
+		if err != nil {
+			fmt.Println(err)
+		}
+		pool.Factory_addr = factory_addr.String()
+
+		select_pool := mysqlconn.Select_pool(db, pool)
+		if select_pool.Id == 0 {
+			mysqlconn.Insert_pool(db, pool)
+		} else {
+			fmt.Println(pool.Pool_addr, "has been stored")
+		}
 
 		db.Close()
 	}

@@ -15,12 +15,10 @@ type Tokens struct {
 }
 
 type Pools struct {
-	Id        int
-	Pool_addr string
-	Token_1   Tokens
-	Token_2   Tokens
-	Token_3   Tokens
-	Protocol  string
+	Id           int
+	Pool_addr    string
+	Factory_addr string
+	Protocol     string
 }
 
 func panic_err(err error) {
@@ -56,6 +54,24 @@ func Select_token(db *sql.DB, token Tokens) Tokens {
 	return to
 }
 
+func Select_pool(db *sql.DB, pool Pools) Pools {
+	var po Pools
+	po.Id = 0
+
+	sql := "select * from pools where pool_addr = ?"
+
+	rows, err := db.Query(sql, pool.Pool_addr)
+	panic_err(err)
+
+	for rows.Next() {
+		if err := rows.Scan(&po.Id, &po.Pool_addr, &po.Protocol, &po.Factory_addr); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	return po
+}
+
 func Select_token_by_id(db *sql.DB, id int) Tokens {
 	var token Tokens
 
@@ -84,17 +100,9 @@ func Select_pool_by_id(db *sql.DB, id int) Pools {
 	defer rows.Close()
 
 	for rows.Next() {
-		var token_1_id int
-		var token_2_id int
-		var token_3_id int
-		err := rows.Scan(&pool.Id, &pool.Pool_addr, &pool.Protocol, &token_1_id, &token_2_id, &token_3_id)
+		err := rows.Scan(&pool.Id, &pool.Pool_addr, &pool.Protocol, &pool.Factory_addr)
 		panic_err(err)
 
-		pool.Token_1 = Select_token_by_id(db, token_1_id)
-		pool.Token_2 = Select_token_by_id(db, token_2_id)
-		if token_3_id != 0 {
-			pool.Token_3 = Select_token_by_id(db, token_3_id)
-		}
 	}
 
 	return pool
@@ -122,12 +130,12 @@ func Insert_token(db *sql.DB, token Tokens) int {
 }
 
 func Insert_pool(db *sql.DB, pool Pools) {
-	sql := "insert into pools(pool_addr, protocol, token_1_id, token_2_id, token_3_id) values(?,?,?,?,?)" // TODO
+	sql := "insert into pools(pool_addr, protocol, factory_addr) values(?,?,?)"
 	stmt, err := db.Prepare(sql)
 	panic_err(err)
 	defer stmt.Close()
 
-	result, err := stmt.Exec(pool.Pool_addr, pool.Protocol, pool.Token_1.Id, pool.Token_2.Id, pool.Token_3.Id)
+	result, err := stmt.Exec(pool.Pool_addr, pool.Protocol, pool.Factory_addr)
 	panic_err(err)
 
 	row_number, err := result.LastInsertId()
@@ -158,8 +166,7 @@ func Main() {
 	fmt.Println("Pool id: ", pool.Id)
 	fmt.Println("Pool addr: ", pool.Pool_addr)
 	fmt.Println("Pool prot: ", pool.Protocol)
-	fmt.Println("Pool token_1 name: ", pool.Token_1.Token_name)
-	fmt.Println("Pool token_2 name: ", pool.Token_2.Token_name)
+	fmt.Println("Pool fact: ", pool.Factory_addr)
 
 	db.Close()
 }
