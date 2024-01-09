@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/big"
 
 	"os"
 
@@ -73,7 +72,7 @@ func getTxs(client *ethclient.Client) {
 	var block *types.Block
 	var err error
 
-	block, err = client.BlockByNumber(context.Background(), big.NewInt(18768231)) //big.NewInt(28880676))
+	block, err = client.BlockByNumber(context.Background(), nil) //big.NewInt(28880676))
 
 	if err != nil {
 		log.Fatal(err)
