@@ -94,6 +94,8 @@ func getTxs(client *ethclient.Client) {
 			extractParam(tx, combine, abiJSON, client)
 		}
 	}
+
+	fmt.Println("block number: ", block.Number())
 }
 
 func extractParam(tx *types.Transaction, _combine signature.Combine, _abiJSON abi.ABI, client *ethclient.Client) {
