@@ -193,3 +193,7 @@ func readABI() abi.ABI {
 
 	return abiJSON
 }
+
+func increaseTokenHeat(token mysqlconn.Tokens) {
+
+}
