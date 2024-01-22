@@ -28,8 +28,21 @@ func panic_err(err error) {
 	}
 }
 
-func Update() {
+func Update_token_heat(db *sql.DB, increment int, to Tokens) int {
+	sql := "update tokens set heat = ? where id = ?"
 
+	stmt, err := db.Prepare(sql)
+	panic_err(err)
+	defer stmt.Close()
+
+	result, err := stmt.Exec(increment, to.Id)
+	panic_err(err)
+
+	row_number, err := result.LastInsertId()
+	panic_err(err)
+
+	log.Println("Token insert success ", row_number)
+	return int(row_number)
 }
 
 func Select_token(db *sql.DB, token Tokens) Tokens {
