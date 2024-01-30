@@ -42,6 +42,7 @@ func Update_token_heat(db *sql.DB, increment int, to Tokens) int {
 	panic_err(err)
 
 	log.Println("Token insert success ", row_number)
+
 	return int(row_number)
 }
 
