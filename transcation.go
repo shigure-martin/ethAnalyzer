@@ -20,9 +20,6 @@ func txTest() {
 	client := getClient(true)
 
 	getBlockInfo(client)
-	// getAllTxInfo(client, *big.NewInt(8882896))
-	// txEth(client)
-	// describeBlock()
 }
 
 func getClient(isURL bool) *ethclient.Client {
@@ -40,7 +37,7 @@ func getClient(isURL bool) *ethclient.Client {
 	return client
 }
 
-func getBlockInfo(client *ethclient.Client) { //用于获取当前最新区块的head number，以及其中包含交易的数量
+func getBlockInfo(client *ethclient.Client) {
 	header, err := client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		log.Fatal(err)
@@ -73,7 +70,6 @@ func getAllTxInfo(client *ethclient.Client, number big.Int) {
 
 	for _, tx := range block.Transactions()[:1] {
 		fmt.Println("transaction hash: ", tx.Hash().Hex())
-		// fmt.Println(hexutil.Encode(tx.Data()))
 		chainId, err := client.ChainID(context.Background())
 		if err != nil {
 			log.Fatal(err)

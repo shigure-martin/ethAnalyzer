@@ -122,10 +122,6 @@ func Select_pool_by_id(db *sql.DB, id int) Pools {
 	return pool
 }
 
-func Delete() {
-
-}
-
 func Insert_token(db *sql.DB, token Tokens) int {
 
 	sql := "insert into tokens(token_name, token_addr) values(?,?)"

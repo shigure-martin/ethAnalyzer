@@ -98,6 +98,25 @@ func getTxs(client *ethclient.Client) {
 	fmt.Println("block number: ", block.Number())
 }
 
+func readABI() abi.ABI {
+	abiFile, err := os.ReadFile("signature/abi.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var abiJSON abi.ABI
+	err = json.Unmarshal(abiFile, &abiJSON)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return abiJSON
+}
+
+func increaseTokenHeat(token mysqlconn.Tokens) {
+
+}
+
 func extractParam(tx *types.Transaction, _combine signature.Combine, _abiJSON abi.ABI, client *ethclient.Client) {
 	_data := tx.Data()
 
@@ -176,24 +195,4 @@ func extractParam(tx *types.Transaction, _combine signature.Combine, _abiJSON ab
 
 		db.Close()
 	}
-
-}
-
-func readABI() abi.ABI {
-	abiFile, err := os.ReadFile("signature/abi.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var abiJSON abi.ABI
-	err = json.Unmarshal(abiFile, &abiJSON)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return abiJSON
-}
-
-func increaseTokenHeat(token mysqlconn.Tokens) {
-
 }
