@@ -170,10 +170,12 @@ func extractParam(tx *types.Transaction, _combine signature.Combine, _abiJSON ab
 			if select_r.Id == 0 {
 				select_r.Id = mysqlconn.Insert_token(db, to)
 			} else {
+				mysqlconn.Update_token_heat(db, select_r.Id)
 				fmt.Println(to.Token_name, " has been stored")
 			}
 			token_list = append(token_list, select_r)
 		}
+		mysqlconn.Dec_token_heat(db)
 
 		fmt.Println(pool)
 		router, err := NewRouter(*tx.To(), client)

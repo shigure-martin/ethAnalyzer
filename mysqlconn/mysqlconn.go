@@ -12,6 +12,7 @@ type Tokens struct {
 	Id         int
 	Token_name string
 	Token_addr string
+	Heat       int
 }
 
 type Pools struct {
@@ -28,14 +29,30 @@ func panic_err(err error) {
 	}
 }
 
-func Update_token_heat(db *sql.DB, increment int, to Tokens) int {
-	sql := "update tokens set heat = ? where id = ?"
+func Dec_token_heat(db *sql.DB) {
+	sql := "update tokens set heat = heat - 3"
 
 	stmt, err := db.Prepare(sql)
 	panic_err(err)
 	defer stmt.Close()
 
-	result, err := stmt.Exec(increment, to.Id)
+	result, err := stmt.Exec()
+	panic_err(err)
+
+	row_number, err := result.LastInsertId()
+	panic_err(err)
+
+	log.Println("Token heat decreased ", row_number)
+}
+
+func Update_token_heat(db *sql.DB, id int) int {
+	sql := "update tokens set heat = heat + ? where id = ?"
+
+	stmt, err := db.Prepare(sql)
+	panic_err(err)
+	defer stmt.Close()
+
+	result, err := stmt.Exec(100, id)
 	panic_err(err)
 
 	row_number, err := result.LastInsertId()
@@ -60,7 +77,7 @@ func Select_token(db *sql.DB, token Tokens) Tokens {
 
 	for rows.Next() {
 
-		if err := rows.Scan(&to.Id, &to.Token_name, &to.Token_addr); err != nil {
+		if err := rows.Scan(&to.Id, &to.Token_name, &to.Token_addr, &to.Heat); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -96,7 +113,7 @@ func Select_token_by_id(db *sql.DB, id int) Tokens {
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&token.Id, &token.Token_name, &token.Token_addr); err != nil {
+		if err := rows.Scan(&token.Id, &token.Token_name, &token.Token_addr, &token.Heat); err != nil {
 			log.Fatal(err)
 		}
 	}
